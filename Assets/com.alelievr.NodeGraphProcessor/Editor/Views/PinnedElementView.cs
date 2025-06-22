@@ -107,17 +107,38 @@ namespace GraphProcessor
         {
             _pinnedElement = pinnedElement;
 
-            SetPosition(pinnedElement.position);
+            // Clamp position and size to window bounds
+            var windowSize = graphView.layout.size;
+            var clampedPosition = new Rect(
+                Mathf.Clamp(pinnedElement.position.x, 0, windowSize.x - pinnedElement.position.width),
+                Mathf.Clamp(pinnedElement.position.y, 0, windowSize.y - pinnedElement.position.height),
+                Mathf.Clamp(pinnedElement.position.width, 50, windowSize.x),
+                Mathf.Clamp(pinnedElement.position.height, 50, windowSize.y)
+            );
+            SetPosition(clampedPosition);
 
             onResized += () =>
             {
-                pinnedElement.position.size = layout.size;
+                var newSize = layout.size;
+                var newPosition = layout.position;
+                var clampedRect = new Rect(
+                    Mathf.Clamp(newPosition.x, 0, windowSize.x - newSize.x),
+                    Mathf.Clamp(newPosition.y, 0, windowSize.y - newSize.y),
+                    Mathf.Clamp(newSize.x, 50, windowSize.x),
+                    Mathf.Clamp(newSize.y, 50, windowSize.y)
+                );
+                pinnedElement.position = clampedRect;
             };
 
             RegisterCallback<MouseUpEvent>(
                 e =>
                 {
-                    pinnedElement.position.position = layout.position;
+                    var newPosition = layout.position;
+                    var clampedPosition = new Vector2(
+                        Mathf.Clamp(newPosition.x, 0, windowSize.x - layout.width),
+                        Mathf.Clamp(newPosition.y, 0, windowSize.y - layout.height)
+                    );
+                    pinnedElement.position.position = clampedPosition;
                 });
 
             Initialize(graphView);
