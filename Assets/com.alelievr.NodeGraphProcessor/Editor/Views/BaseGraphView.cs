@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -12,10 +13,10 @@ using Object = UnityEngine.Object;
 
 namespace GraphProcessor
 {
-	/// <summary>
-	/// Base class to write a custom view for a node
-	/// </summary>
-	public class BaseGraphView : GraphView, IDisposable
+    /// <summary>
+    ///     Base class to write a custom view for a node
+    /// </summary>
+    public class BaseGraphView : GraphView, IDisposable
     {
         #region Nested type: ComputeOrderUpdatedDelegate
         public delegate void ComputeOrderUpdatedDelegate();
@@ -27,24 +28,24 @@ namespace GraphProcessor
 
         #region Fields
         /// <summary>
-        /// Graph that owns of the node
+        ///     Graph that owns of the node
         /// </summary>
         public BaseGraph graph;
 
         /// <summary>
-        /// Connector listener that will create the edges between ports
+        ///     Connector listener that will create the edges between ports
         /// </summary>
         public BaseEdgeConnectorListener connectorListener;
 
         /// <summary>
-        /// List of all node views in the graph
+        ///     List of all node views in the graph
         /// </summary>
         /// <typeparam name="BaseNodeView"></typeparam>
         /// <returns></returns>
         public readonly List<BaseNodeView> nodeViews = new();
 
         /// <summary>
-        /// Dictionary of the node views accessed view the node instance, faster than a Find in the node view list
+        ///     Dictionary of the node views accessed view the node instance, faster than a Find in the node view list
         /// </summary>
         /// <typeparam name="BaseNode"></typeparam>
         /// <typeparam name="BaseNodeView"></typeparam>
@@ -52,34 +53,34 @@ namespace GraphProcessor
         public readonly Dictionary<BaseNode, BaseNodeView> nodeViewsPerNode = new();
 
         /// <summary>
-        /// List of all edge views in the graph
+        ///     List of all edge views in the graph
         /// </summary>
         /// <typeparam name="EdgeView"></typeparam>
         /// <returns></returns>
         public readonly List<EdgeView> edgeViews = new();
 
         /// <summary>
-        /// List of all group views in the graph
+        ///     List of all group views in the graph
         /// </summary>
         /// <typeparam name="GroupView"></typeparam>
         /// <returns></returns>
         public readonly List<GroupView> groupViews = new();
 
 #if UNITY_2020_1_OR_NEWER
-	    /// <summary>
-	    /// List of all sticky note views in the graph
-	    /// </summary>
-	    /// <typeparam name="StickyNoteView"></typeparam>
-	    /// <returns></returns>
-	    public readonly List<StickyNoteView> stickyNoteViews = new();
+        /// <summary>
+        ///     List of all sticky note views in the graph
+        /// </summary>
+        /// <typeparam name="StickyNoteView"></typeparam>
+        /// <returns></returns>
+        public readonly List<StickyNoteView> stickyNoteViews = new();
 #endif
 
-	    /// <summary>
-	    /// List of all stack node views in the graph
-	    /// </summary>
-	    /// <typeparam name="BaseStackNodeView"></typeparam>
-	    /// <returns></returns>
-	    public readonly List<BaseStackNodeView> stackNodeViews = new();
+        /// <summary>
+        ///     List of all stack node views in the graph
+        /// </summary>
+        /// <typeparam name="BaseStackNodeView"></typeparam>
+        /// <returns></returns>
+        public readonly List<BaseStackNodeView> stackNodeViews = new();
 
         private readonly Dictionary<Type, PinnedElementView> pinnedElements = new();
 
@@ -90,9 +91,8 @@ namespace GraphProcessor
 
         #region Properties
         /// <summary>
-        /// Object to handle nodes that shows their UI in the inspector.
+        ///     Object to handle nodes that shows their UI in the inspector.
         /// </summary>
-        [SerializeField]
         protected NodeInspectorObject nodeInspector
         {
             get
@@ -106,7 +106,7 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Workaround object for creating exposed parameter property fields.
+        ///     Workaround object for creating exposed parameter property fields.
         /// </summary>
         public ExposedParameterFieldFactory exposedParameterFactory { get; private set; }
 
@@ -143,35 +143,6 @@ namespace GraphProcessor
         #endregion
 
         #region Methods
-        /// <summary>
-        /// Triggered just after the graph is initialized
-        /// </summary>
-        public event Action initialized;
-
-        /// <summary>
-        /// Triggered just after the compute order of the graph is updated
-        /// </summary>
-        public event ComputeOrderUpdatedDelegate computeOrderUpdated;
-
-        // Safe event relay from BaseGraph (safe because you are sure to always point on a valid BaseGraph
-        // when one of these events is called), a graph switch can occur between two call tho
-        /// <summary>
-        /// Same event than BaseGraph.onExposedParameterListChanged
-        /// Safe event (not triggered in case the graph is null).
-        /// </summary>
-        public event Action onExposedParameterListChanged;
-
-        /// <summary>
-        /// Same event than BaseGraph.onExposedParameterModified
-        /// Safe event (not triggered in case the graph is null).
-        /// </summary>
-        public event Action<ExposedParameter> onExposedParameterModified;
-
-        /// <summary>
-        /// Triggered when a node is duplicated (crt-d) or copy-pasted (crtl-c/crtl-v)
-        /// </summary>
-        public event NodeDuplicatedDelegate nodeDuplicated;
-
         protected virtual NodeInspectorObject CreateNodeInspectorObject()
         {
             var inspector = ScriptableObject.CreateInstance<NodeInspectorObject>();
@@ -181,6 +152,35 @@ namespace GraphProcessor
             return inspector;
         }
         #endregion
+
+        /// <summary>
+        ///     Triggered just after the graph is initialized
+        /// </summary>
+        public event Action initialized;
+
+        /// <summary>
+        ///     Triggered just after the compute order of the graph is updated
+        /// </summary>
+        public event ComputeOrderUpdatedDelegate computeOrderUpdated;
+
+        // Safe event relay from BaseGraph (safe because you are sure to always point on a valid BaseGraph
+        // when one of these events is called), a graph switch can occur between two call tho
+        /// <summary>
+        ///     Same event than BaseGraph.onExposedParameterListChanged
+        ///     Safe event (not triggered in case the graph is null).
+        /// </summary>
+        public event Action onExposedParameterListChanged;
+
+        /// <summary>
+        ///     Same event than BaseGraph.onExposedParameterModified
+        ///     Safe event (not triggered in case the graph is null).
+        /// </summary>
+        public event Action<ExposedParameter> onExposedParameterModified;
+
+        /// <summary>
+        ///     Triggered when a node is duplicated (crt-d) or copy-pasted (crtl-c/crtl-v)
+        /// </summary>
+        public event NodeDuplicatedDelegate nodeDuplicated;
 
         #region Callbacks
         protected override bool canCopySelection
@@ -357,80 +357,78 @@ namespace GraphProcessor
 
                 // Destroy priority of objects
                 // We need nodes to be destroyed first because we can have a destroy operation that uses node connections
-                changes.elementsToRemove.Sort(
-                    (e1, e2) =>
+                changes.elementsToRemove.Sort((e1, e2) =>
+                {
+                    int GetPriority(GraphElement e)
                     {
-                        int GetPriority(GraphElement e)
+                        if (e is BaseNodeView)
                         {
-                            if (e is BaseNodeView)
-                            {
-                                return 0;
-                            }
-                            return 1;
+                            return 0;
                         }
+                        return 1;
+                    }
 
-                        return GetPriority(e1).CompareTo(GetPriority(e2));
-                    });
+                    return GetPriority(e1).CompareTo(GetPriority(e2));
+                });
 
                 //Handle ourselves the edge and node remove
-                changes.elementsToRemove.RemoveAll(
-                    e =>
+                changes.elementsToRemove.RemoveAll(e =>
+                {
+                    switch (e)
                     {
-                        switch (e)
-                        {
-                            case EdgeView edge:
-                                Disconnect(edge);
-                                return true;
-                            case BaseNodeView nodeView:
-                                // For vertical nodes, we need to delete them ourselves as it's not handled by GraphView
-                                foreach (var pv in nodeView.inputPortViews.Concat(nodeView.outputPortViews))
+                        case EdgeView edge:
+                            Disconnect(edge);
+                            return true;
+                        case BaseNodeView nodeView:
+                            // For vertical nodes, we need to delete them ourselves as it's not handled by GraphView
+                            foreach (var pv in nodeView.inputPortViews.Concat(nodeView.outputPortViews))
+                            {
+                                if (pv.orientation == Orientation.Vertical)
                                 {
-                                    if (pv.orientation == Orientation.Vertical)
+                                    foreach (var edge in pv.GetEdges().ToList())
                                     {
-                                        foreach (var edge in pv.GetEdges().ToList())
-                                        {
-                                            Disconnect(edge);
-                                        }
+                                        Disconnect(edge);
                                     }
                                 }
+                            }
 
-                                nodeInspector.NodeViewRemoved(nodeView);
-                                ExceptionToLog.Call(() => nodeView.OnRemoved());
-                                graph.RemoveNode(nodeView.nodeTarget);
-                                UpdateSerializedProperties();
-                                RemoveElement(nodeView);
-                                if (Selection.activeObject == nodeInspector)
-                                {
-                                    UpdateNodeInspectorSelection();
-                                }
+                            nodeInspector.NodeViewRemoved(nodeView);
+                            ExceptionToLog.Call(() => nodeView.OnRemoved());
+                            graph.RemoveNode(nodeView.nodeTarget);
+                            UpdateSerializedProperties();
+                            RemoveElement(nodeView);
+                            if (Selection.activeObject == nodeInspector)
+                            {
+                                UpdateNodeInspectorSelection();
+                            }
 
-                                SyncSerializedPropertyPathes();
-                                return true;
-                            case GroupView group:
-                                graph.RemoveGroup(group.group);
-                                UpdateSerializedProperties();
-                                RemoveElement(group);
-                                return true;
-                            case ExposedParameterFieldView blackboardField:
-                                graph.RemoveExposedParameter(blackboardField.parameter);
-                                UpdateSerializedProperties();
-                                return true;
-                            case BaseStackNodeView stackNodeView:
-                                graph.RemoveStackNode(stackNodeView.stackNode);
-                                UpdateSerializedProperties();
-                                RemoveElement(stackNodeView);
-                                return true;
+                            SyncSerializedPropertyPathes();
+                            return true;
+                        case GroupView group:
+                            graph.RemoveGroup(group.group);
+                            UpdateSerializedProperties();
+                            RemoveElement(group);
+                            return true;
+                        case ExposedParameterFieldView blackboardField:
+                            graph.RemoveExposedParameter(blackboardField.parameter);
+                            UpdateSerializedProperties();
+                            return true;
+                        case BaseStackNodeView stackNodeView:
+                            graph.RemoveStackNode(stackNodeView.stackNode);
+                            UpdateSerializedProperties();
+                            RemoveElement(stackNodeView);
+                            return true;
 #if UNITY_2020_1_OR_NEWER
-                            case StickyNoteView stickyNoteView:
-                                graph.RemoveStickyNote(stickyNoteView.note);
-                                UpdateSerializedProperties();
-                                RemoveElement(stickyNoteView);
-                                return true;
+                        case StickyNoteView stickyNoteView:
+                            graph.RemoveStickyNote(stickyNoteView.note);
+                            UpdateSerializedProperties();
+                            RemoveElement(stickyNoteView);
+                            return true;
 #endif
-                        }
+                    }
 
-                        return false;
-                    });
+                    return false;
+                });
             }
 
             return changes;
@@ -468,41 +466,40 @@ namespace GraphProcessor
             var compatiblePorts = new List<Port>();
 
             compatiblePorts.AddRange(
-                ports.ToList().Where(
-                    p =>
+                ports.ToList().Where(p =>
+                {
+                    var portView = p as PortView;
+
+                    if (portView.owner == (startPort as PortView).owner)
                     {
-                        var portView = p as PortView;
+                        return false;
+                    }
 
-                        if (portView.owner == (startPort as PortView).owner)
-                        {
-                            return false;
-                        }
+                    if (p.direction == startPort.direction)
+                    {
+                        return false;
+                    }
 
-                        if (p.direction == startPort.direction)
-                        {
-                            return false;
-                        }
+                    //Check for type assignability
+                    if (!BaseGraph.TypesAreConnectable(startPort.portType, p.portType))
+                    {
+                        return false;
+                    }
 
-                        //Check for type assignability
-                        if (!BaseGraph.TypesAreConnectable(startPort.portType, p.portType))
-                        {
-                            return false;
-                        }
+                    //Check if the edge already exists
+                    if (portView.GetEdges().Any(e => e.input == startPort || e.output == startPort))
+                    {
+                        return false;
+                    }
 
-                        //Check if the edge already exists
-                        if (portView.GetEdges().Any(e => e.input == startPort || e.output == startPort))
-                        {
-                            return false;
-                        }
-
-                        return true;
-                    }));
+                    return true;
+                }));
 
             return compatiblePorts;
         }
 
         /// <summary>
-        /// Build the contextual menu shown when right clicking inside the graph view
+        ///     Build the contextual menu shown when right clicking inside the graph view
         /// </summary>
         /// <param name="evt"></param>
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
@@ -517,7 +514,7 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Add the New Group entry to the context menu
+        ///     Add the New Group entry to the context menu
         /// </summary>
         /// <param name="evt"></param>
         protected virtual void BuildGroupContextualMenu(ContextualMenuPopulateEvent evt, int menuPosition = -1)
@@ -535,7 +532,7 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// -Add the New Sticky Note entry to the context menu
+        ///     -Add the New Sticky Note entry to the context menu
         /// </summary>
         /// <param name="evt"></param>
         protected virtual void BuildStickyNoteContextualMenu(ContextualMenuPopulateEvent evt, int menuPosition = -1)
@@ -555,7 +552,7 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Add the View entry to the context menu
+        ///     Add the View entry to the context menu
         /// </summary>
         /// <param name="evt"></param>
         protected virtual void BuildViewContextualMenu(ContextualMenuPopulateEvent evt)
@@ -564,7 +561,7 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Add the Select Asset entry to the context menu
+        ///     Add the Select Asset entry to the context menu
         /// </summary>
         /// <param name="evt"></param>
         protected virtual void BuildSelectAssetContextualMenu(ContextualMenuPopulateEvent evt)
@@ -573,22 +570,19 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Add the Save Asset entry to the context menu
+        ///     Add the Save Asset entry to the context menu
         /// </summary>
         /// <param name="evt"></param>
         protected virtual void BuildSaveAssetContextualMenu(ContextualMenuPopulateEvent evt)
         {
             evt.menu.AppendAction(
                 "Save Asset",
-                e =>
-                {
-                    SaveGraphToDisk();
-                },
+                e => { SaveGraphToDisk(); },
                 DropdownMenuAction.AlwaysEnabled);
         }
 
         /// <summary>
-        /// Add the Help entry to the context menu
+        ///     Add the Help entry to the context menu
         /// </summary>
         /// <param name="evt"></param>
         protected void BuildHelpContextualMenu(ContextualMenuPopulateEvent evt)
@@ -610,6 +604,16 @@ namespace GraphProcessor
             {
                 SaveGraphToDisk();
                 e.StopPropagation();
+            }
+            else if (e.keyCode == KeyCode.F2)
+            {
+                // Handle F2 for parameter renaming
+                var selectedParameters = selection.OfType<ExposedParameterFieldView>().ToList();
+                if (selectedParameters.Count == 1 && !selectedParameters[0].IsEditing)
+                {
+                    selectedParameters[0].StartEditing();
+                    e.StopPropagation();
+                }
             }
             else if (nodeViews.Count > 0 && e.commandKey && e.altKey)
             {
@@ -646,14 +650,13 @@ namespace GraphProcessor
 
         private void MouseUpCallback(MouseUpEvent e)
         {
-            schedule.Execute(
-                () =>
+            schedule.Execute(() =>
+            {
+                if (DoesSelectionContainsInspectorNodes())
                 {
-                    if (DoesSelectionContainsInspectorNodes())
-                    {
-                        UpdateNodeInspectorSelection();
-                    }
-                }).ExecuteLater(1);
+                    UpdateNodeInspectorSelection();
+                }
+            }).ExecuteLater(1);
         }
 
         private void MouseDownCallback(MouseDownEvent e)
@@ -683,7 +686,7 @@ namespace GraphProcessor
         private void DragPerformedCallback(DragPerformEvent e)
         {
             var mousePos = (e.currentTarget as VisualElement).ChangeCoordinatesTo(contentViewContainer, e.localMousePosition);
-            
+
             // External objects drag and drop
             if (DragAndDrop.objectReferences.Length > 0)
             {
@@ -813,14 +816,13 @@ namespace GraphProcessor
 
             // When pressing ctrl-s, we save the graph
             EditorSceneManager.sceneSaved += _ => SaveGraphToDisk();
-            RegisterCallback<KeyDownEvent>(
-                e =>
+            RegisterCallback<KeyDownEvent>(e =>
+            {
+                if (e.keyCode == KeyCode.S && e.actionKey)
                 {
-                    if (e.keyCode == KeyCode.S && e.actionKey)
-                    {
-                        SaveGraphToDisk();
-                    }
-                });
+                    SaveGraphToDisk();
+                }
+            });
 
             ClearGraphElements();
 
@@ -885,7 +887,7 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Allow you to create your own edge connector listener
+        ///     Allow you to create your own edge connector listener
         /// </summary>
         /// <returns></returns>
         protected virtual BaseEdgeConnectorListener CreateEdgeConnectorListener()
@@ -1273,11 +1275,7 @@ namespace GraphProcessor
             outputNodeView.RefreshPorts();
 
             // In certain cases the edge color is wrong so we patch it
-            schedule.Execute(
-                () =>
-                {
-                    e.UpdateEdgeControl();
-                }).ExecuteLater(1);
+            schedule.Execute(() => { e.UpdateEdgeControl(); }).ExecuteLater(1);
 
             e.isConnected = true;
 
@@ -1398,11 +1396,74 @@ namespace GraphProcessor
                 return;
             }
 
-            EditorUtility.SetDirty(graph);
-            AssetDatabase.SaveAssets();
+            // Get the asset path
+            var assetPath = AssetDatabase.GetAssetPath(graph);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                // If no asset path, this might be a new asset, so just save normally
+                EditorUtility.SetDirty(graph);
+                AssetDatabase.SaveAssets();
+                return;
+            }
+
+            // Create a temporary copy of the current asset
+            var tempPath = assetPath + ".temp";
+
+            try
+            {
+                // Copy the current asset to temp
+                AssetDatabase.CopyAsset(assetPath, tempPath);
+
+                // Load the temp asset
+                var tempGraph = AssetDatabase.LoadAssetAtPath<BaseGraph>(tempPath);
+                if (tempGraph == null)
+                {
+                    // Fallback to normal save if temp creation fails
+                    EditorUtility.SetDirty(graph);
+                    AssetDatabase.SaveAssets();
+                    return;
+                }
+
+                // Apply current changes to the temp asset
+                EditorUtility.CopySerialized(graph, tempGraph);
+                EditorUtility.SetDirty(tempGraph);
+
+                // Force Unity to serialize the temp asset
+                AssetDatabase.SaveAssets();
+
+                // Compare the actual file contents
+                var originalBytes = File.ReadAllBytes(assetPath);
+                var tempBytes = File.ReadAllBytes(tempPath);
+
+                // Compare the bytes
+                var hasChanges = !originalBytes.SequenceEqual(tempBytes);
+
+                if (hasChanges)
+                {
+                    // There are actual changes, so save the real asset
+                    EditorUtility.SetDirty(graph);
+                    AssetDatabase.SaveAssets();
+                }
+                // If no changes, we don't save anything
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Error during byte comparison save: {e.Message}. Falling back to normal save.");
+                // Fallback to normal save if anything goes wrong
+                EditorUtility.SetDirty(graph);
+                AssetDatabase.SaveAssets();
+            }
+            finally
+            {
+                // Clean up the temp file
+                if (AssetDatabase.AssetPathExists(tempPath))
+                {
+                    AssetDatabase.DeleteAsset(tempPath);
+                }
+            }
         }
 
-        public void ToggleView<TView, TModel>() 
+        public void ToggleView<TView, TModel>()
             where TView : PinnedElementView
             where TModel : PinnedElement
         {
@@ -1424,7 +1485,7 @@ namespace GraphProcessor
             }
         }
 
-        public void OpenPinned<TView, TModel>() 
+        public void OpenPinned<TView, TModel>()
             where TView : PinnedElementView
             where TModel : PinnedElement
         {
@@ -1497,7 +1558,7 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Deletes the selected content, can be called form an IMGUI container
+        ///     Deletes the selected content, can be called form an IMGUI container
         /// </summary>
         public void DelayedDeleteSelection()
         {
@@ -1535,8 +1596,8 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Update all the serialized property bindings (in case a node was deleted / added, the property pathes needs to be
-        /// updated)
+        ///     Update all the serialized property bindings (in case a node was deleted / added, the property pathes needs to be
+        ///     updated)
         /// </summary>
         public void SyncSerializedPropertyPathes()
         {
@@ -1548,7 +1609,7 @@ namespace GraphProcessor
         }
 
         /// <summary>
-        /// Call this function when you want to remove this view
+        ///     Call this function when you want to remove this view
         /// </summary>
         public void Dispose()
         {

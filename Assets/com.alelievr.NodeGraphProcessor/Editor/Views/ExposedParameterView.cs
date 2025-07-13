@@ -48,7 +48,7 @@ namespace GraphProcessor
                         graphView.graph.AddExposedParameter(uniqueName, paramType);
                         var row = _content.Children().Last() as BlackboardRow;
                         var exposedParameterFieldView = row.Q<ExposedParameterFieldView>();
-                        exposedParameterFieldView.OpenTextEditor();
+                        exposedParameterFieldView.StartEditing();
                     });
             }
 
