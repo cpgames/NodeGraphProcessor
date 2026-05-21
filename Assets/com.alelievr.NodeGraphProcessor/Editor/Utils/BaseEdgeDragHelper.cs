@@ -277,6 +277,10 @@ namespace GraphProcessor
             wasPanned = true;
         }
 
+        public override bool HandlePointerDown(PointerDownEvent evt) => false;
+        public override void HandlePointerMove(PointerMoveEvent evt) { }
+        public override void HandlePointerUp(PointerUpEvent evt) { }
+
         public override void HandleMouseUp(MouseUpEvent evt)
         {
             bool didConnect = false;
